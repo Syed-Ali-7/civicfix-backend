@@ -12,6 +12,10 @@ const sequelize = new Sequelize(databaseUrl, {
   logging: false,
   dialectOptions: {
     application_name: 'CivicFixBackend',
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // required for Render SSL
+    }
   },
 });
 
