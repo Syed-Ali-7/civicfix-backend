@@ -102,6 +102,26 @@ const getUsers = async (req, res, next) => {
   }
 };
 
+const checkUser = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      where: { email: normalizedEmail, role: 'citizen' },
+    });
+
+    return res.json({ exists: !!existingUser });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const sendOtp = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -112,10 +132,6 @@ const sendOtp = async (req, res, next) => {
     const { name, email } = req.body;
     const trimmedName = String(name || '').trim();
     const normalizedEmail = String(email || '').trim().toLowerCase();
-
-    if (!trimmedName) {
-      return res.status(400).json({ message: 'Name is required' });
-    }
 
     const otp = createOtp(normalizedEmail);
 
@@ -200,6 +216,7 @@ module.exports = {
   login,
   getUsers,
   updatePushToken,
+  checkUser,
   sendOtp,
   verifyOtpLogin,
 };
