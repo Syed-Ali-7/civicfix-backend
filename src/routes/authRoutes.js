@@ -1,6 +1,6 @@
 const express = require('express');
-const { body, query } = require('express-validator');
-const { register, login, getUsers, firebaseLogin, firebaseCheck } = require('../controllers/authController');
+const { body } = require('express-validator');
+const { register, login, getUsers, sendOtp, verifyOtpLogin } = require('../controllers/authController');
 const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -25,14 +25,21 @@ const loginValidation = [
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 router.post(
-  '/firebase-login',
-  [body('phone').trim().notEmpty().withMessage('Phone number is required')],
-  firebaseLogin
+  '/send-otp',
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+  ],
+  sendOtp
 );
-router.get(
-  '/firebase-check',
-  [query('phone').trim().notEmpty().withMessage('Phone number is required')],
-  firebaseCheck
+router.post(
+  '/verify-otp',
+  [
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+    body('name').optional().trim(),
+  ],
+  verifyOtpLogin
 );
 router.get('/users', authenticateToken, authorizeRoles('admin'), getUsers);
 

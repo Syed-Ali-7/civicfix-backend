@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { User, roles } = require('../models');
+const { createOtp, verifyOtp } = require('../services/otpService');
+const { sendOTPEmail } = require('../services/emailService');
 
 const buildToken = (user) =>
   jwt.sign(
@@ -11,7 +13,6 @@ const buildToken = (user) =>
       designation: user.designation || null,
       name: user.name,
       email: user.email,
-      phone: user.phone || null,
     },
     process.env.JWT_SECRET,
     {
@@ -23,7 +24,6 @@ const sanitizeUser = (user) => ({
   id: user.id,
   name: user.name,
   email: user.email,
-  phone: user.phone || null,
   role: user.role,
   designation: user.designation || null,
 });
@@ -102,54 +102,65 @@ const getUsers = async (req, res, next) => {
   }
 };
 
-const firebaseCheck = async (req, res, next) => {
+const sendOtp = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // FIREBASE OTP AUTH
-    const { phone } = req.query || {};
-    const normalizedPhone = String(phone || '').trim();
+    const { name, email } = req.body;
+    const trimmedName = String(name || '').trim();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
-    if (!normalizedPhone) {
-      return res.status(400).json({ message: 'Phone number is required' });
+    if (!trimmedName) {
+      return res.status(400).json({ message: 'Name is required' });
     }
 
-    const existingUser = await User.findOne({ where: { phone: normalizedPhone } });
-    return res.json({ exists: !!existingUser });
+    const otp = createOtp(normalizedEmail);
+    await sendOTPEmail(normalizedEmail, otp);
+
+    return res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
     return next(error);
   }
 };
 
-const firebaseLogin = async (req, res, next) => {
+const verifyOtpLogin = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // FIREBASE OTP AUTH
-    const { phone, name } = req.body;
-    const normalizedPhone = String(phone || '').trim();
+    const { name, email, otp } = req.body;
+    const trimmedName = String(name || '').trim();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
-    if (!normalizedPhone) {
-      return res.status(400).json({ message: 'Phone number is required' });
+    const verification = verifyOtp(normalizedEmail, otp);
+    if (!verification.valid) {
+      return res.status(400).json({ message: verification.message });
     }
 
-    let user = await User.findOne({ where: { phone: normalizedPhone } });
-    const trimmedName = name ? String(name).trim() : '';
-
+    let user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
+      if (!trimmedName) {
+        return res.status(400).json({ message: 'Name is required for new users' });
+      }
       user = await User.create({
-        name: trimmedName || 'Citizen',
-        phone: normalizedPhone,
+        name: trimmedName,
+        email: normalizedEmail,
         role: 'citizen',
+        designation: null,
       });
-    } else if (trimmedName && (!user.name || user.name === 'Citizen')) {
-      await user.update({ name: trimmedName });
+    } else {
+      // Always clear designation for citizens
+      if (user.role === 'citizen' && user.designation) {
+        await user.update({ designation: null });
+      }
+      if (trimmedName && (!user.name || user.name === 'Citizen')) {
+        await user.update({ name: trimmedName });
+      }
     }
 
     const token = buildToken(user);
@@ -179,7 +190,7 @@ module.exports = {
   login,
   getUsers,
   updatePushToken,
-  firebaseCheck,
-  firebaseLogin,
+  sendOtp,
+  verifyOtpLogin,
 };
 

@@ -1,5 +1,16 @@
 const nodemailer = require('nodemailer');
 
+const createTransporter = () =>
+  nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
 const formatDateTime = (value) => {
   if (!value) return '-';
   const d = new Date(value);
@@ -110,15 +121,7 @@ const sendEscalationEmail = async (issue, supervisor) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const transporter = createTransporter();
 
     const createdAt = new Date(issue.created_at || issue.createdAt);
     const daysOverdue = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
@@ -147,4 +150,25 @@ const sendEscalationEmail = async (issue, supervisor) => {
   }
 };
 
-module.exports = { sendEscalationEmail };
+const sendOTPEmail = async (email, otp) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('Email credentials are not set');
+  }
+
+  if (!email) {
+    throw new Error('Email is required');
+  }
+
+  const transporter = createTransporter();
+  const subject = 'CivicFix Email Verification';
+  const text = `Your CivicFix verification code is ${otp}. This OTP expires in 5 minutes.`;
+
+  await transporter.sendMail({
+    from: `CivicFix <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject,
+    text,
+  });
+};
+
+module.exports = { sendEscalationEmail, sendOTPEmail };
