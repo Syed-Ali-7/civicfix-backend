@@ -15,9 +15,9 @@ const slaEscalationService = require('./src/services/slaEscalationService');
 
 dotenv.config();
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+if (!process.env.RESEND_API_KEY) {
   console.warn(
-    '[EMAIL] Warning: Email credentials not set. Escalation emails will be skipped.'
+    '[EMAIL] Warning: Resend API key not set. Escalation emails will be skipped.'
   );
 }
 

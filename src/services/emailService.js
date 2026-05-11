@@ -1,16 +1,14 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const createTransporter = () =>
-  nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
+const getResendClient = () => {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('Resend API key is not set');
+  }
+
+  return new Resend(process.env.RESEND_API_KEY);
+};
+
+const DEFAULT_FROM = 'onboarding@resend.dev';
 
 const formatDateTime = (value) => {
   if (!value) return '-';
@@ -116,33 +114,33 @@ const buildSubject = (issue, daysOverdue) => {
 
 const sendEscalationEmail = async (issue, supervisor) => {
   // EMAIL ESCALATION
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('[EMAIL] Warning: Email credentials not set. Escalation emails will be skipped.');
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[EMAIL] Warning: Resend API key not set. Escalation emails will be skipped.');
     return;
   }
 
   try {
-    const transporter = createTransporter();
+    const resend = getResendClient();
 
     const createdAt = new Date(issue.created_at || issue.createdAt);
     const daysOverdue = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
 
 
     console.log('[EMAIL] Sending escalation email', {
-      from: process.env.EMAIL_USER,
+      from: DEFAULT_FROM,
       to: 'civicfixsupervisor7@gmail.com',
       issueId: issue.id,
     });
 
-    await transporter.sendMail({
-      from: `CivicFix Alert <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: `CivicFix Alert <${DEFAULT_FROM}>`,
       to: 'civicfixsupervisor7@gmail.com',
       subject: buildSubject(issue, daysOverdue),
       html: buildHtml(issue, supervisor, daysOverdue),
     });
 
     console.log(
-      `[EMAIL] Escalation email sent to civicfixsupervisor7@gmail.com from ${process.env.EMAIL_USER} for Issue #${issue.id}`
+      `[EMAIL] Escalation email sent to civicfixsupervisor7@gmail.com from ${DEFAULT_FROM} for Issue #${issue.id}`
     );
   } catch (error) {
     console.log(
@@ -152,23 +150,20 @@ const sendEscalationEmail = async (issue, supervisor) => {
 };
 
 const sendOTPEmail = async (email, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Email credentials are not set');
-  }
-
   if (!email) {
     throw new Error('Email is required');
   }
 
-  const transporter = createTransporter();
+  const resend = getResendClient();
+
   const subject = 'CivicFix Email Verification';
   const text = `Your CivicFix verification code is ${otp}. This OTP expires in 5 minutes.`;
 
   console.log('Sending OTP email...', { to: email });
 
   try {
-    await transporter.sendMail({
-      from: `CivicFix <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: `CivicFix <${DEFAULT_FROM}>`,
       to: email,
       subject,
       text,

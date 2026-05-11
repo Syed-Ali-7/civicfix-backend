@@ -37,6 +37,7 @@
     "onnxruntime-node": "^1.23.2",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
+    "resend": "^4.0.0",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
