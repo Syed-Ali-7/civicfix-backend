@@ -2,13 +2,14 @@ const nodemailer = require('nodemailer');
 
 const createTransporter = () =>
   nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 
 const formatDateTime = (value) => {
@@ -163,12 +164,20 @@ const sendOTPEmail = async (email, otp) => {
   const subject = 'CivicFix Email Verification';
   const text = `Your CivicFix verification code is ${otp}. This OTP expires in 5 minutes.`;
 
-  await transporter.sendMail({
-    from: `CivicFix <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject,
-    text,
-  });
+  console.log('Sending OTP email...', { to: email });
+
+  try {
+    await transporter.sendMail({
+      from: `CivicFix <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject,
+      text,
+    });
+    console.log('OTP email sent successfully', { to: email });
+  } catch (error) {
+    console.error('OTP email failed:', error);
+    throw error;
+  }
 };
 
 module.exports = { sendEscalationEmail, sendOTPEmail };

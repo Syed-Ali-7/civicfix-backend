@@ -118,11 +118,21 @@ const sendOtp = async (req, res, next) => {
     }
 
     const otp = createOtp(normalizedEmail);
-    await sendOTPEmail(normalizedEmail, otp);
 
-    return res.json({ success: true, message: 'OTP sent successfully' });
+    try {
+      await sendOTPEmail(normalizedEmail, otp);
+      return res.json({ success: true, message: 'OTP sent successfully' });
+    } catch (emailError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP. Please try again later.',
+      });
+    }
   } catch (error) {
-    return next(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP. Please try again later.',
+    });
   }
 };
 
