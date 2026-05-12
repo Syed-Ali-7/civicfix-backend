@@ -14,7 +14,8 @@ const logger = require('./logger');
 const BACKEND_ROOT = path.resolve(__dirname, '../../');
 const PIPELINE_SCRIPT = path.resolve(process.cwd(), 'ai', 'ai_pipeline.py');
 const TIMEOUT_MS = 60000; // 60 seconds
-const PYTHON_BIN = process.env.PYTHON_BIN || 'python3';
+const PYTHON_BIN =
+  process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
 
 /** @type {{ success: boolean, is_pothole: boolean, severity: string, sla_days: number }} */
 const AI_SAFE_DEFAULT = {

@@ -13,19 +13,22 @@ async function createOfficerAccounts() {
         name: 'Officer A',
         email: 'officer1@example.com',
         password: 'password123',
-        role: 'admin'
+        role: 'admin',
+        designation: 'level_1'
       },
       {
         name: 'Officer B',
         email: 'officer2@example.com',
         password: 'password123',
-        role: 'admin'
+        role: 'admin',
+        designation: 'zonal_officer'
       },
       {
         name: 'Officer C',
         email: 'officer3@example.com',
         password: 'password123',
-        role: 'admin'
+        role: 'admin',
+        designation: 'supervisor'
       }
     ];
 
@@ -36,7 +39,16 @@ async function createOfficerAccounts() {
         const existingUser = await User.findOne({ where: { email: officer.email } });
         
         if (existingUser) {
-          console.log(`⚠️  Officer ${officer.name} already exists`);
+          if (!existingUser.designation) {
+            await existingUser.update({
+              designation: officer.designation,
+            });
+            console.log(
+              `✅ Updated designation for ${officer.name} (${officer.email})`
+            );
+          } else {
+            console.log(`⚠️  Officer ${officer.name} already exists`);
+          }
           continue;
         }
 
@@ -47,6 +59,7 @@ async function createOfficerAccounts() {
           email: officer.email,
           password: hashedPassword,
           role: officer.role,
+          designation: officer.designation,
         });
 
         console.log(`✅ Created officer: ${officer.name} (${officer.email})`);
