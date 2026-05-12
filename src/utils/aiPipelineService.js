@@ -15,6 +15,7 @@ const PROJECT_ROOT = path.join(__dirname, '../../../');
 const BACKEND_ROOT = path.join(__dirname, '../../');
 const PIPELINE_SCRIPT = path.join(PROJECT_ROOT, 'ai_pipeline.py');
 const TIMEOUT_MS = 60000; // 60 seconds
+const PYTHON_BIN = process.env.PYTHON_BIN || 'python3';
 
 /** @type {{ success: boolean, is_pothole: boolean, severity: string, sla_days: number }} */
 const AI_SAFE_DEFAULT = {
@@ -37,7 +38,7 @@ const AI_SAFE_DEFAULT = {
 async function runAIPipeline(imagePath) {
   return new Promise((resolve) => {
     // Wrap path in quotes to handle spaces
-    const cmd = `python "${PIPELINE_SCRIPT}" "${imagePath}"`;
+    const cmd = `${PYTHON_BIN} "${PIPELINE_SCRIPT}" "${imagePath}"`;
 
     const options = {
       cwd: BACKEND_ROOT,
@@ -45,7 +46,7 @@ async function runAIPipeline(imagePath) {
       maxBuffer: 1024 * 1024, // 1 MB stdout buffer
     };
 
-    logger.info(`[AI] Starting pipeline for: ${path.basename(imagePath)}`);
+    logger.info(`[AI] Pipeline started for: ${path.basename(imagePath)}`);
 
     exec(cmd, options, (error, stdout, stderr) => {
       if (error) {
@@ -88,11 +89,21 @@ async function runAIPipeline(imagePath) {
 
       try {
         const result = JSON.parse(jsonStr);
-        logger.info('[AI] Pipeline result', {
+        logger.info('[AI] Python execution successful');
+        logger.info('[AI] Prediction result', {
           is_pothole: result.is_pothole,
           severity: result.severity,
           sla_days: result.sla_days,
           confidence: result.detection_confidence,
+        });
+
+        if (!result.is_pothole) {
+          logger.info('[AI] Non-pothole rejected');
+        }
+
+        logger.info('[AI] Severity classified', {
+          severity: result.severity,
+          sla_days: result.sla_days,
         });
         return resolve(result);
       } catch (parseErr) {
