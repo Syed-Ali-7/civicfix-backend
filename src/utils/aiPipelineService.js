@@ -10,10 +10,9 @@ const { exec } = require('child_process');
 const path = require('path');
 const logger = require('./logger');
 
-// Project root — where ai_pipeline.py and the .keras files live
+// Resolve script from the container working directory (/app in Docker)
 const BACKEND_ROOT = path.resolve(__dirname, '../../');
-const PROJECT_ROOT = path.resolve(BACKEND_ROOT, '..');
-const PIPELINE_SCRIPT = path.join(PROJECT_ROOT, 'ai_pipeline.py');
+const PIPELINE_SCRIPT = path.resolve(process.cwd(), 'ai_pipeline.py');
 const TIMEOUT_MS = 60000; // 60 seconds
 const PYTHON_BIN = process.env.PYTHON_BIN || 'python3';
 
@@ -38,6 +37,7 @@ const AI_SAFE_DEFAULT = {
 async function runAIPipeline(imagePath) {
   return new Promise((resolve) => {
     // Wrap path in quotes to handle spaces
+    // Use resolved script path so Docker/Render resolves correctly.
     const cmd = `${PYTHON_BIN} "${PIPELINE_SCRIPT}" "${imagePath}"`;
 
     const options = {
