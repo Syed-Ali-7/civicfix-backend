@@ -7,7 +7,7 @@ const PythonModelBridge = require('./pythonModelBridge');
 const path = require('path');
 
 const pythonBridge = new PythonModelBridge(
-  path.join(__dirname, '../../../pothole_model.keras')
+  path.join(__dirname, '../../../ai/pothole_model.keras')
 );
 
 /**

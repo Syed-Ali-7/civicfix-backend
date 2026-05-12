@@ -8,13 +8,13 @@ const path = require('path');
 const fs = require('fs');
 
 class PythonModelBridge {
-  constructor(modelPath = 'pothole_model.keras', pythonPath = 'python3') {
+  constructor(modelPath = 'ai/pothole_model.keras', pythonPath = 'python3') {
     // Resolve absolute paths from project root
     this.modelPath = path.isAbsolute(modelPath)
       ? modelPath
       : path.join(__dirname, '../../../', modelPath);
     this.pythonPath = pythonPath;
-    this.scriptPath = path.join(__dirname, '../../../pothole_model.py');
+    this.scriptPath = path.join(__dirname, '../../../ai/pothole_model.py');
   }
 
   /**

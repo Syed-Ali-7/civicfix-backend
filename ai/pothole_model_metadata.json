@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-09T12:03:23.015279",
+  "model_path": "pothole_model.keras",
+  "image_size": 224,
+  "batch_size": 32,
+  "test_accuracy": 0.9696202278137207,
+  "test_precision": 0.9514563083648682,
+  "test_recall": 0.9898989796638489,
+  "optimal_threshold": 0.8,
+  "architecture": "MobileNetV2 Transfer Learning + Fine-tuning"
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-13T07:45:19.490066",
+  "model_path": "severity_model.keras",
+  "image_size": 224,
+  "classes": [
+    "low",
+    "high"
+  ],
+  "test_accuracy": 0.7683615684509277,
+  "architecture": "MobileNetV2 Transfer Learning \u2014 Severity Classification"
+}

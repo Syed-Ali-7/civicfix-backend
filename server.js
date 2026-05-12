@@ -12,6 +12,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 const { connectDB, sequelize } = require('./src/config/db');
 // SLA TRACKER: Background service for SLA breach escalation
 const slaEscalationService = require('./src/services/slaEscalationService');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -20,6 +21,15 @@ if (!process.env.RESEND_API_KEY) {
     '[EMAIL] Warning: Resend API key not set. Escalation emails will be skipped.'
   );
 }
+
+const logAIPipelineStatus = () => {
+  const pipelinePath = path.resolve(process.cwd(), 'ai', 'ai_pipeline.py');
+  const exists = fs.existsSync(pipelinePath);
+  console.log(`[AI] Resolved pipeline path: ${pipelinePath}`);
+  if (!exists) {
+    console.error('[AI] ai_pipeline.py not found. AI pipeline will use safe defaults.');
+  }
+};
 
 const app = express();
 
@@ -76,6 +86,8 @@ const startServer = async () => {
   try {
     await connectDB();
     await sequelize.sync();
+
+    logAIPipelineStatus();
 
     // SLA TRACKER: Start hourly escalation checks
     slaEscalationService.start();

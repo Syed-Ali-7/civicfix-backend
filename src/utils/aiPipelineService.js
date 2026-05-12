@@ -10,9 +10,9 @@ const { exec } = require('child_process');
 const path = require('path');
 const logger = require('./logger');
 
-// Resolve script from the container working directory (/app in Docker)
+// Resolve script from the backend folder (/app in Docker)
 const BACKEND_ROOT = path.resolve(__dirname, '../../');
-const PIPELINE_SCRIPT = path.resolve(process.cwd(), 'ai_pipeline.py');
+const PIPELINE_SCRIPT = path.resolve(process.cwd(), 'ai', 'ai_pipeline.py');
 const TIMEOUT_MS = 60000; // 60 seconds
 const PYTHON_BIN = process.env.PYTHON_BIN || 'python3';
 
@@ -47,6 +47,7 @@ async function runAIPipeline(imagePath) {
     };
 
     logger.info(`[AI] Pipeline started for: ${path.basename(imagePath)}`);
+    logger.info(`[AI] Resolved pipeline path: ${PIPELINE_SCRIPT}`);
 
     exec(cmd, options, (error, stdout, stderr) => {
       if (error) {
