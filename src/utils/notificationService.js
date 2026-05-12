@@ -1,13 +1,22 @@
-const { Expo } = require('expo-server-sdk');
+let Expo;
 
-const expo = new Expo();
+const loadExpo = async () => {
+  if (!Expo) {
+    const expoModule = await import('expo-server-sdk');
+    Expo = expoModule.Expo;
+  }
+  return Expo;
+};
 
 async function sendPushNotification(pushToken, title, body, data = {}) {
   // EXPO PUSH NOTIFICATIONS
   // Notifications fire on: Escalated, Resolved only
   // Never fire for: Open status changes
   if (!pushToken) return;
-  if (!Expo.isExpoPushToken(pushToken)) {
+  const ExpoSDK = await loadExpo();
+  const expo = new ExpoSDK();
+
+  if (!ExpoSDK.isExpoPushToken(pushToken)) {
     console.log('[NOTIF] Invalid push token:', pushToken);
     return;
   }
