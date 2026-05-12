@@ -11,8 +11,8 @@ const path = require('path');
 const logger = require('./logger');
 
 // Project root — where ai_pipeline.py and the .keras files live
-const PROJECT_ROOT = path.join(__dirname, '../../../');
-const BACKEND_ROOT = path.join(__dirname, '../../');
+const BACKEND_ROOT = path.resolve(__dirname, '../../');
+const PROJECT_ROOT = path.resolve(BACKEND_ROOT, '..');
 const PIPELINE_SCRIPT = path.join(PROJECT_ROOT, 'ai_pipeline.py');
 const TIMEOUT_MS = 60000; // 60 seconds
 const PYTHON_BIN = process.env.PYTHON_BIN || 'python3';
